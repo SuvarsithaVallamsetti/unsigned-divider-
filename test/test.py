@@ -27,8 +27,10 @@ async def run_divider_test(dut):
     for dividend in range(0, 16):
         for divisor in range(1, 16):
             dut.ui_in.value = pack_input(dividend, divisor)
-            await RisingEdge(dut.clk)    # Wait for posedge clk
-            await Timer(1, units='ns')   # Wait for outputs to settle (IMPORTANT FIX)
+            
+            await RisingEdge(dut.clk)    # Inputs get sampled here
+            await RisingEdge(dut.clk)    # DUT computes and outputs result here
+            await Timer(1, units='ns')   # Wait for outputs to settle
 
             value = int(dut.uo_out.value)
             quotient, remainder = extract_output(value)
@@ -42,7 +44,8 @@ async def run_divider_test(dut):
     # Divide-by-zero Test
     dut.ui_in.value = pack_input(5, 0)
     await RisingEdge(dut.clk)
-    await Timer(1, units='ns')   # Wait for outputs to settle
+    await RisingEdge(dut.clk)  # Allow DUT to process
+    await Timer(1, units='ns')
     assert int(dut.uo_out.value) == 0xFF, f"Divide-by-zero test failed, got {int(dut.uo_out.value):02X}"
 
     dut._log.info("Divider Test Passed Successfully!")
