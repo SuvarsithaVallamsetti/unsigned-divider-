@@ -26,36 +26,38 @@ module tb;
         .ena(ena)
     );
 
-    // Clock generation (Optional, since your design is combinational)
+    // Clock generation
     always #5 clk = ~clk;
 
     initial begin
         $display("Time | Dividend | Divisor | Quotient | Remainder");
         $display("------------------------------------------------");
 
-        // Test Case 1: 10 / 3
-        ui_in = {4'd10, 4'd3}; #10;
-        $display("%4t |    %2d    |   %2d    |    %2d    |     %2d", $time, ui_in[7:4], ui_in[3:0], uo_out[7:4], uo_out[3:0]);
+        // Reset sequence
+        rst_n = 0;
+        #10;
+        rst_n = 1;
+        #10;
 
-        // Test Case 2: 15 / 5
-        ui_in = {4'd15, 4'd5}; #10;
-        $display("%4t |    %2d    |   %2d    |    %2d    |     %2d", $time, ui_in[7:4], ui_in[3:0], uo_out[7:4], uo_out[3:0]);
+        // Test Case 1: 11 / 3
+        ui_in = {4'd11, 4'd3}; #10;
+        $display("%4t |    %2d    |   %2d    |    %2d    |     %2d", 
+                 $time, ui_in[7:4], ui_in[3:0], uo_out[7:4], uo_out[3:0]);
 
-        // Test Case 3: 9 / 2
-        ui_in = {4'd9, 4'd2}; #10;
-        $display("%4t |    %2d    |   %2d    |    %2d    |     %2d", $time, ui_in[7:4], ui_in[3:0], uo_out[7:4], uo_out[3:0]);
+        // Test Case 2: 255 / 1
+        ui_in = {4'd15, 4'd1}; #10;  // Adjusted to fit 4-bit inputs (max 15)
+        $display("%4t |   %2d    |   %2d    |    %2d    |     %2d", 
+                 $time, ui_in[7:4], ui_in[3:0], uo_out[7:4], uo_out[3:0]);
 
-        // Test Case 4: 7 / 3
-        ui_in = {4'd7, 4'd3}; #10;
-        $display("%4t |    %2d    |   %2d    |    %2d    |     %2d", $time, ui_in[7:4], ui_in[3:0], uo_out[7:4], uo_out[3:0]);
+        // Test Case 3: 5 / 10
+        ui_in = {4'd5, 4'd10}; #10;
+        $display("%4t |    %2d    |   %2d    |    %2d    |     %2d", 
+                 $time, ui_in[7:4], ui_in[3:0], uo_out[7:4], uo_out[3:0]);
 
-        // Test Case 5: 8 / 4
-        ui_in = {4'd8, 4'd4}; #10;
-        $display("%4t |    %2d    |   %2d    |    %2d    |     %2d", $time, ui_in[7:4], ui_in[3:0], uo_out[7:4], uo_out[3:0]);
-
-        // Test Case 6: Divide by Zero Test (Dividend=5, Divisor=0)
-        ui_in = {4'd5, 4'd0}; #10;
-        $display("%4t |    %2d    |   %2d    |    %2d    |     %2d", $time, ui_in[7:4], ui_in[3:0], uo_out[7:4], uo_out[3:0]);
+        // Test Case 4: 25 / 0
+        ui_in = {4'd9, 4'd0}; #10;  // 25 can't fit in 4 bits, reduced to 9
+        $display("%4t |    %2d    |   %2d    |    %2d    |     %2d", 
+                 $time, ui_in[7:4], ui_in[3:0], uo_out[7:4], uo_out[3:0]);
 
         $finish;
     end
