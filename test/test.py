@@ -1,5 +1,5 @@
 import cocotb
-from cocotb.triggers import RisingEdge
+from cocotb.triggers import RisingEdge, Timer
 
 def pack_input(dividend, divisor):
     return (dividend << 4) | (divisor & 0xF)
@@ -13,17 +13,21 @@ def extract_output(value):
 async def run_divider_test(dut):
     dut._log.info("Starting Divider Testbench...")
 
-    dut.ena.value = 1
+    # Reset
     dut.rst_n.value = 0
     await RisingEdge(dut.clk)
     dut.rst_n.value = 1
     await RisingEdge(dut.clk)
 
+    # Loop through all test cases
     for dividend in range(0, 16):
         for divisor in range(1, 16):
             dut.ui_in.value = pack_input(dividend, divisor)
-            await RisingEdge(dut.clk)  # Latch Inputs
-            await RisingEdge(dut.clk)  # Wait for Output Update
+            dut.ena.value = 1
+
+            await RisingEdge(dut.clk)  # Input latch
+            await RisingEdge(dut.clk)  # Output latch
+            await Timer(1, units='ns') # Give time for outputs to settle
 
             value = dut.uo_out.value.integer
             quotient, remainder = extract_output(value)
@@ -36,10 +40,12 @@ async def run_divider_test(dut):
             assert remainder == expected_remainder, \
                 f"{dividend}/{divisor}: Remainder mismatch! Got {remainder}, Expected {expected_remainder}"
 
-    # Divide-by-zero test
+    # Divide-by-zero case
     dut.ui_in.value = pack_input(5, 0)
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
+    await Timer(1, units='ns')
+
     value = dut.uo_out.value.integer
     assert value == 0xFF, f"Divide-by-zero test failed: Got {value:02X}, Expected FF"
 
