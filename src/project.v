@@ -1,27 +1,37 @@
-/*
- * Copyright (c) 2024 Your Name
- * SPDX-License-Identifier: Apache-2.0
- */
-
-`default_nettype none
-
-module tt_um_example (
-    input  wire [7:0] ui_in,    // Dedicated inputs
-    output wire [7:0] uo_out,   // Dedicated outputs
-    input  wire [7:0] uio_in,   // IOs: Input path
-    output wire [7:0] uio_out,  // IOs: Output path
-    output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
-    input  wire       ena,      // always 1 when the design is powered, so you can ignore it
-    input  wire       clk,      // clock
-    input  wire       rst_n     // reset_n - low to reset
+module tt_um_restoring_divider (
+    input  [7:0] in,   // in[7:4]=dividend (4-bit), in[3:0]=divisor (4-bit)
+    output [7:0] out   // out[7:4]=quotient (4-bit), out[3:0]=remainder (4-bit)
 );
 
-  // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
-  assign uio_oe  = 0;
+    wire [3:0] dividend = in[7:4];
+    wire [3:0] divisor = in[3:0];
 
-  // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+    reg [3:0] quotient;
+    reg [3:0] remainder;
+
+    integer i;
+    reg [4:0] A;
+    reg [3:0] M;
+
+    always @(*) begin
+        A = 0;
+        M = divisor;
+        quotient = 0;
+
+        for (i = 0; i < 4; i = i + 1) begin
+            A = {A[3:0], dividend[3 - i]};
+            A = A - M;
+
+            if (A[4] == 1'b1) begin
+                A = A + M;
+                quotient = quotient << 1;
+            end else begin
+                quotient = (quotient << 1) | 1'b1;
+            end
+        end
+        remainder = A[3:0];
+    end
+
+    assign out = {quotient, remainder};
 
 endmodule
