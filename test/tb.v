@@ -1,38 +1,46 @@
-`default_nettype none
-`timescale 1ns / 1ps
+`timescale 1ns/1ps
 
-/* This testbench just instantiates the module and makes some convenient wires
-   that can be driven / tested by the cocotb test.py.
-*/
-module tb ();
+module tb_restoring_divider;
 
-  // Dump the signals to a VCD file. You can view it with gtkwave or surfer.
-  initial begin
-    $dumpfile("tb.vcd");
-    $dumpvars(0, tb);
-    #1;
-  end
+    reg [7:0] in;
+    wire [7:0] out;
 
-  // Wire up the inputs and outputs:
-  reg clk;
-  reg rst_n;
-  reg ena;
-  reg [7:0] ui_in;
-  reg [7:0] uio_in;
-  wire [7:0] uo_out;
-  wire [7:0] uio_out;
-  wire [7:0] uio_oe;
+    // Instantiate the User Module Under Test (UUT)
+    tt_um_restoring_divider uut (
+        .in(in),
+        .out(out)
+    );
 
-  // Replace tt_um_example with your module name:
-  tt_um_example user_project (
-      .ui_in  (ui_in),    // Dedicated inputs
-      .uo_out (uo_out),   // Dedicated outputs
-      .uio_in (uio_in),   // IOs: Input path
-      .uio_out(uio_out),  // IOs: Output path
-      .uio_oe (uio_oe),   // IOs: Enable path (active high: 0=input, 1=output)
-      .ena    (ena),      // enable - goes high when design is selected
-      .clk    (clk),      // clock
-      .rst_n  (rst_n)     // not reset
-  );
+    initial begin
+        $display("Time | Dividend | Divisor | Quotient | Remainder");
+        $display("------------------------------------------------");
+
+        // Test Case 1: 10 / 3
+        in = {4'd10, 4'd3};
+        #10;
+        $display("%4t |    %2d    |   %2d    |    %2d    |     %2d", $time, in[7:4], in[3:0], out[7:4], out[3:0]);
+
+        // Test Case 2: 15 / 5
+        in = {4'd15, 4'd5};
+        #10;
+        $display("%4t |    %2d    |   %2d    |    %2d    |     %2d", $time, in[7:4], in[3:0], out[7:4], out[3:0]);
+
+        // Test Case 3: 9 / 2
+        in = {4'd9, 4'd2};
+        #10;
+        $display("%4t |    %2d    |   %2d    |    %2d    |     %2d", $time, in[7:4], in[3:0], out[7:4], out[3:0]);
+
+        // Test Case 4: 7 / 3
+        in = {4'd7, 4'd3};
+        #10;
+        $display("%4t |    %2d    |   %2d    |    %2d    |     %2d", $time, in[7:4], in[3:0], out[7:4], out[3:0]);
+
+        // Test Case 5: 8 / 4
+        in = {4'd8, 4'd4};
+        #10;
+        $display("%4t |    %2d    |   %2d    |    %2d    |     %2d", $time, in[7:4], in[3:0], out[7:4], out[3:0]);
+
+        $finish;
+    end
 
 endmodule
