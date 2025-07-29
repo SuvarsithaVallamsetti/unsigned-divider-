@@ -19,25 +19,18 @@ module tt_um_unsigned_divider (
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            dividend     <= 4'd0;
-            divisor      <= 4'd0;
-            quotient     <= 4'd0;
-            remainder    <= 4'd0;
-            uo_out_reg   <= 8'd0;
+            uo_out_reg <= 8'd0;
         end else if (ena) begin
             dividend  <= ui_in[7:4];
             divisor   <= ui_in[3:0];
 
             if (ui_in[3:0] == 4'd0) begin
-                uo_out_reg <= 8'hFF;  // Divide by zero case
+                uo_out_reg <= 8'hFF;
             end else begin
                 quotient  <= ui_in[7:4] / ui_in[3:0];
                 remainder <= ui_in[7:4] % ui_in[3:0];
                 uo_out_reg <= {quotient, remainder};
             end
-        end else begin
-            // Retain previous output when ena is low
-            uo_out_reg <= uo_out_reg;
         end
     end
 
