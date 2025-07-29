@@ -2,11 +2,11 @@
 
 module tb;
 
-    reg  [7:0] ui_in;
-    reg  [7:0] uio_in = 8'b0;
-    reg clk = 1'b0;
-    reg rst_n = 1'b0;
-    reg ena = 1'b1;
+    reg  [7:0] ui_in = 0;
+    reg  [7:0] uio_in = 0;
+    reg clk = 0;
+    reg rst_n = 1;
+    reg ena = 1;
 
     wire [7:0] uo_out;
     wire [7:0] uio_out;
@@ -23,10 +23,6 @@ module tb;
         .ena(ena)
     );
 
-    always #5 clk = ~clk;  // 100MHz Clock
-
-    initial begin
-        #10 rst_n = 1;  // De-assert reset after 10ns
-    end
+    always #5 clk = ~clk;
 
 endmodule
