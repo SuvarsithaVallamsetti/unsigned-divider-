@@ -1,49 +1,99 @@
 module tt_um_unsigned_divider (
-    input  [7:0] ui_in,    // ui_in[7:4] = dividend, ui_in[3:0] = divisor
-    output [7:0] uo_out,   // uo_out[7:4] = quotient, uo_out[3:0] = remainder
-    input  [7:0] uio_in,   // unused
-    output [7:0] uio_out,  // unused
-    output [7:0] uio_oe,   // unused
+
+    input  [7:0] ui_in,    // ui_in = dividend
+
+    output [7:0] uo_out,   // uo_out = quotient
+
+    input  [7:0] uio_in,   // uio_in = divisor
+
+    output [7:0] uio_out,  // uio_out = remainder
+
+    output [7:0] uio_oe,   // uio_oe = output enable (all 1s)
+
     input clk,             // unused
+
     input rst_n,           // unused
+
     input ena              // unused
+
 );
 
-    // Unused signals
-    assign uio_out = 8'b0;
-    assign uio_oe  = 8'b0;
 
-    wire [3:0] dividend = ui_in[7:4];
-    wire [3:0] divisor  = ui_in[3:0];
 
-    reg  [3:0] quotient;
-    reg  [3:0] remainder;
-    reg  [4:0] A;  // One extra bit for restoring
+    // Enable all bits of uio as output
+
+    assign uio_oe = 8'hFF;
+
+
+
+    wire [7:0] dividend = ui_in;
+
+    wire [7:0] divisor  = uio_in;
+
+
+
+    reg [7:0] quotient;
+
+    reg [7:0] remainder;
+
+
+
+    reg [15:0] A;  // Extra space for shifting during division
+
     integer i;
 
+
+
     always @(*) begin
-        quotient = 0;
-        A = 0;
+
+        quotient  = 0;
+
+        A         = 0;
+
+
 
         if (divisor == 0) begin
-            quotient  = 4'b1111; // Handle divide by zero case (optional)
-            remainder = 4'b1111;
+
+            quotient  = 8'hFF; // optional divide-by-zero indicator
+
+            remainder = 8'hFF;
+
         end else begin
-            for (i = 0; i < 4; i = i + 1) begin
-                A = {A[3:0], dividend[3 - i]};
+
+            for (i = 0; i < 8; i = i + 1) begin
+
+                A = {A[14:0], dividend[7 - i]};
+
                 A = A - divisor;
 
-                if (A[4] == 1'b1) begin
+
+
+                if (A[15] == 1'b1) begin
+
                     A = A + divisor;
+
                     quotient = quotient << 1;
+
                 end else begin
+
                     quotient = (quotient << 1) | 1'b1;
+
                 end
+
             end
-            remainder = A[3:0];
+
+            remainder = A[7:0];
+
         end
+
     end
 
-    assign uo_out = {quotient, remainder};
+
+
+    assign uo_out  = quotient;
+
+    assign uio_out = remainder;
+
+
 
 endmodule
