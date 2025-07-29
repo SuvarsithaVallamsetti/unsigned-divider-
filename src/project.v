@@ -1,6 +1,6 @@
 module tt_um_unsigned_divider (
     input  [7:0] ui_in,    // upper 4 bits: dividend, lower 4 bits: divisor
-    output [7:0] uo_out,   // upper 4 bits: quotient, lower 4 bits: remainder
+    output reg [7:0] uo_out,   // Changed to reg type for combinational assignment
     input  [7:0] uio_in,
     output [7:0] uio_out,
     output [7:0] uio_oe,
@@ -11,32 +11,35 @@ module tt_um_unsigned_divider (
 
     reg [3:0] dividend, divisor;
     reg [3:0] quotient, remainder;
-    reg [7:0] uo_out_reg;
 
-    assign uo_out = uo_out_reg;
     assign uio_out = 8'd0;
-    assign uio_oe = 8'd0;
+    assign uio_oe  = 8'd0;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            dividend     <= 4'd0;
-            divisor      <= 4'd0;
-            quotient     <= 4'd0;
-            remainder    <= 4'd0;
-            uo_out_reg   <= 8'd0;
+            dividend  <= 4'd0;
+            divisor   <= 4'd0;
+            quotient  <= 4'd0;
+            remainder <= 4'd0;
+            uo_out    <= 8'd0;
         end else if (ena) begin
             dividend  <= ui_in[7:4];
             divisor   <= ui_in[3:0];
 
             if (ui_in[3:0] == 4'd0) begin
-                // Divide by zero case
-                uo_out_reg <= 8'hFF;
+                // Divide-by-zero condition
+                quotient  <= 4'hF;  // Set to 0xF to form 0xFF in output
+                remainder <= 4'hF;
             end else begin
-                quotient  <= dividend / divisor;
-                remainder <= dividend % divisor;
-                uo_out_reg <= {quotient, remainder};  // Pack as 8-bit
+                quotient  <= ui_in[7:4] / ui_in[3:0];
+                remainder <= ui_in[7:4] % ui_in[3:0];
             end
         end
+    end
+
+    // Always pack the output from current quotient/remainder
+    always @(*) begin
+        uo_out = {quotient, remainder};
     end
 
 endmodule
