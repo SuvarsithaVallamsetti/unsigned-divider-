@@ -1,49 +1,42 @@
 module tt_um_unsigned_divider (
-    input  [7:0] ui_in,      // ui_in = dividend
-    output [7:0] uo_out,     // uo_out = quotient
-    input  [7:0] uio_in,     // uio_in = divisor
-    output [7:0] uio_out,    // uio_out = remainder
-    output [7:0] uio_oe,     // uio_oe = output enable (all 1s)
-    input clk,               // unused
-    input rst_n,             // unused
-    input ena                // unused
+    input  [7:0] ui_in,    // upper 4 bits: dividend, lower 4 bits: divisor
+    output [7:0] uo_out,   // upper 4 bits: quotient, lower 4 bits: remainder
+    input  [7:0] uio_in,
+    output [7:0] uio_out,
+    output [7:0] uio_oe,
+    input clk,
+    input rst_n,
+    input ena
 );
 
-    // Enable all bits of uio as output
-    assign uio_oe = 8'hFF;
+    reg [3:0] dividend, divisor;
+    reg [3:0] quotient, remainder;
+    reg [7:0] uo_out_reg;
 
-    wire [7:0] dividend = ui_in;
-    wire [7:0] divisor  = uio_in;
+    assign uo_out = uo_out_reg;
+    assign uio_out = 8'd0;
+    assign uio_oe = 8'd0;
 
-    reg [7:0] quotient;
-    reg [7:0] remainder;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            dividend     <= 4'd0;
+            divisor      <= 4'd0;
+            quotient     <= 4'd0;
+            remainder    <= 4'd0;
+            uo_out_reg   <= 8'd0;
+        end else if (ena) begin
+            dividend  <= ui_in[7:4];
+            divisor   <= ui_in[3:0];
 
-    reg [15:0] A;  // Holds intermediate subtraction results
-    integer i;
-
-    always @(*) begin
-        quotient = 0;
-        A = 0;
-
-        if (divisor == 0) begin
-            quotient  = 8'hFF; // Divide-by-zero indication
-            remainder = 8'hFF;
-        end else begin
-            for (i = 0; i < 8; i = i + 1) begin
-                A = {A[14:0], dividend[7 - i]};  // Shift left and bring in MSB of dividend
-
-                if (A >= divisor) begin
-                    A = A - divisor;
-                    quotient = (quotient << 1) | 1;
-                end else begin
-                    quotient = quotient << 1;
-                end
+            if (ui_in[3:0] == 4'd0) begin
+                // Divide by zero case
+                uo_out_reg <= 8'hFF;
+            end else begin
+                quotient  <= dividend / divisor;
+                remainder <= dividend % divisor;
+                uo_out_reg <= {quotient, remainder};  // Pack as 8-bit
             end
-            remainder = A[7:0];
         end
     end
-
-    assign uo_out  = quotient;
-    assign uio_out = remainder;
 
 endmodule
