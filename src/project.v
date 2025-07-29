@@ -1,37 +1,49 @@
-module tt_um_restoring_divider (
-    input  [7:0] in,   // in[7:4]=dividend (4-bit), in[3:0]=divisor (4-bit)
-    output [7:0] out   // out[7:4]=quotient (4-bit), out[3:0]=remainder (4-bit)
+module tt_um_unsigned_divider (
+    input  [7:0] ui_in,    // ui_in[7:4] = dividend, ui_in[3:0] = divisor
+    output [7:0] uo_out,   // uo_out[7:4] = quotient, uo_out[3:0] = remainder
+    input  [7:0] uio_in,   // unused
+    output [7:0] uio_out,  // unused
+    output [7:0] uio_oe,   // unused
+    input clk,             // unused
+    input rst_n,           // unused
+    input ena              // unused
 );
 
-    wire [3:0] dividend = in[7:4];
-    wire [3:0] divisor = in[3:0];
+    // Unused signals
+    assign uio_out = 8'b0;
+    assign uio_oe  = 8'b0;
 
-    reg [3:0] quotient;
-    reg [3:0] remainder;
+    wire [3:0] dividend = ui_in[7:4];
+    wire [3:0] divisor  = ui_in[3:0];
 
+    reg  [3:0] quotient;
+    reg  [3:0] remainder;
+    reg  [4:0] A;  // One extra bit for restoring
     integer i;
-    reg [4:0] A;
-    reg [3:0] M;
 
     always @(*) begin
-        A = 0;
-        M = divisor;
         quotient = 0;
+        A = 0;
 
-        for (i = 0; i < 4; i = i + 1) begin
-            A = {A[3:0], dividend[3 - i]};
-            A = A - M;
+        if (divisor == 0) begin
+            quotient  = 4'b1111; // Handle divide by zero case (optional)
+            remainder = 4'b1111;
+        end else begin
+            for (i = 0; i < 4; i = i + 1) begin
+                A = {A[3:0], dividend[3 - i]};
+                A = A - divisor;
 
-            if (A[4] == 1'b1) begin
-                A = A + M;
-                quotient = quotient << 1;
-            end else begin
-                quotient = (quotient << 1) | 1'b1;
+                if (A[4] == 1'b1) begin
+                    A = A + divisor;
+                    quotient = quotient << 1;
+                end else begin
+                    quotient = (quotient << 1) | 1'b1;
+                end
             end
+            remainder = A[3:0];
         end
-        remainder = A[3:0];
     end
 
-    assign out = {quotient, remainder};
+    assign uo_out = {quotient, remainder};
 
 endmodule
