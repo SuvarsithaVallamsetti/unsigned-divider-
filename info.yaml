@@ -9,7 +9,7 @@ project:
   tiles:        "1x1"
   top_module:   "tt_um_unsigned_divider"
   source_files:
-    - "tt_um_unsigned_divider.v"
+    - "project.v"
 
 pinout:
   # Inputs (Dividend)
